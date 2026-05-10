@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Al Azhar Tex | لوحة التحكم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" href="assets/images/logo-badge.jpg" />
+  <style>
+    /* Admin-specific styles */
+    .admin-body { background: var(--off-white); min-height: 100vh; }
+    .admin-login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%); }
+    .login-card { background: #fff; padding: 2.5rem; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,.3); width: 100%; max-width: 420px; }
+    .login-card .logo { text-align: center; margin-bottom: 1.5rem; }
+    .login-card .logo img { height: 70px; }
+    .login-card h2 { text-align: center; font-size: 1.3rem; font-weight: 900; color: var(--navy); text-transform: uppercase; margin-bottom: .3rem; }
+    .login-card .sub { text-align: center; font-size: .75rem; color: var(--text-light); margin-bottom: 1.8rem; }
+    .login-group { margin-bottom: 1.2rem; }
+    .login-group label { display: block; font-size: .65rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); margin-bottom: .3rem; }
+    .login-group input { width: 100%; padding: .75rem 1rem; border: 2px solid var(--grey-mid); border-radius: var(--radius); font-family: var(--font-main); font-size: .9rem; outline: none; transition: border-color .2s; }
+    .login-group input:focus { border-color: var(--navy); }
+    .login-btn { width: 100%; padding: .9rem; background: var(--navy); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; transition: background .2s; margin-top: .5rem; }
+    .login-btn:hover { background: var(--navy-dark); }
+    .login-error { display: none; background: #fef2f2; border: 1.5px solid var(--red); color: var(--red); padding: .8rem; border-radius: var(--radius); font-size: .78rem; text-align: center; margin-bottom: 1rem; }
+    .login-error.show { display: block; }
+
+    /* Dashboard */
+    .admin-dashboard { display: none; }
+    .admin-dashboard.active { display: block; }
+    .admin-header { background: var(--navy); color: #fff; padding: 1rem 0; position: sticky; top: 0; z-index: 100; }
+    .admin-header-inner { display: flex; align-items: center; justify-content: space-between; }
+    .admin-header .logo-sm { display: flex; align-items: center; gap: .8rem; }
+    .admin-header .logo-sm img { height: 40px; filter: brightness(0) invert(1); }
+    .admin-header .logo-sm span { font-size: .9rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .admin-user { display: flex; align-items: center; gap: 1rem; }
+    .admin-user span { font-size: .75rem; opacity: .8; }
+    .logout-btn { background: var(--red); color: #fff; border: none; padding: .4rem 1rem; border-radius: var(--radius); font-size: .65rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background .2s; }
+    .logout-btn:hover { background: var(--red-dark); }
+
+    .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 64px); }
+    .admin-sidebar { background: var(--navy-dark); color: rgba(255,255,255,.7); padding: 1.5rem 0; }
+    .sidebar-menu { list-style: none; }
+    .sidebar-menu li a { display: flex; align-items: center; gap: .8rem; padding: .85rem 1.5rem; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.6); transition: all .2s; border-left: 3px solid transparent; }
+    .sidebar-menu li a:hover, .sidebar-menu li a.active { background: rgba(255,255,255,.05); color: #fff; border-left-color: var(--red); }
+    .sidebar-menu li a svg { width: 18px; height: 18px; opacity: .6; }
+    .sidebar-menu li a.active svg { opacity: 1; }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.1); margin: 1rem 1.5rem; }
+    .sidebar-label { padding: 0 1.5rem; font-size: .55rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-accent); margin-bottom: .5rem; }
+
+    .admin-main { padding: 2rem; overflow-y: auto; }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; animation: fadeUp .4s both; }
+    .admin-section h2 { font-size: 1.4rem; font-weight: 900; color: var(--navy); text-transform: uppercase; margin-bottom: .3rem; }
+    .admin-section .section-desc { font-size: .85rem; color: var(--text-light); margin-bottom: 1.5rem; }
+
+    /* Stats Cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: #fff; padding: 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--grey-light); transition: all .2s; }
+    .stat-card:hover { border-color: var(--navy); box-shadow: 0 4px 16px rgba(27,42,107,.1); }
+    .stat-card-icon { width: 44px; height: 44px; background: var(--off-white); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: .8rem; }
+    .stat-card-value { font-size: 1.8rem; font-weight: 900; color: var(--navy); line-height: 1; }
+    .stat-card-label { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-light); margin-top: .3rem; }
+    .stat-card-change { font-size: .7rem; font-weight: 700; margin-top: .4rem; }
+    .stat-card-change.up { color: #16a34a; }
+    .stat-card-change.down { color: var(--red); }
+
+    /* Data Tables */
+    .data-table-wrap { background: #fff; border: 1.5px solid var(--grey-light); border-radius: var(--radius); overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: var(--off-white); padding: .9rem 1.2rem; text-align: left; font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--grey-light); white-space: nowrap; }
+    .data-table td { padding: .9rem 1.2rem; font-size: .82rem; color: var(--text); border-bottom: 1px solid var(--grey-light); vertical-align: middle; }
+    .data-table tr:hover td { background: var(--off-white); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .table-actions { display: flex; gap: .4rem; }
+    .table-btn { padding: .35rem .7rem; border-radius: var(--radius); font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: none; cursor: pointer; transition: all .2s; }
+    .table-btn-edit { background: var(--navy); color: #fff; }
+    .table-btn-edit:hover { background: var(--navy-dark); }
+    .table-btn-del { background: var(--red); color: #fff; }
+    .table-btn-del:hover { background: var(--red-dark); }
+    .table-btn-view { background: var(--off-white); color: var(--text); border: 1.5px solid var(--grey-mid); }
+    .table-btn-view:hover { border-color: var(--navy); }
+    .status-badge { display: inline-block; padding: .25rem .6rem; border-radius: 50px; font-size: .6rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .status-new { background: #dbeafe; color: #1e40af; }
+    .status-read { background: var(--off-white); color: var(--text-light); }
+    .status-replied { background: #dcfce7; color: #166534; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+
+    /* Forms in admin */
+    .admin-form { background: #fff; padding: 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--grey-light); }
+    .admin-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .admin-form-group { margin-bottom: 1rem; }
+    .admin-form-group label { display: block; font-size: .65rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); margin-bottom: .3rem; }
+    .admin-form-group input, .admin-form-group textarea, .admin-form-group select { width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--grey-mid); border-radius: var(--radius); font-family: var(--font-main); font-size: .85rem; outline: none; transition: all .2s; }
+    .admin-form-group input:focus, .admin-form-group textarea:focus, .admin-form-group select:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(27,42,107,.07); }
+    .admin-form-group textarea { resize: vertical; min-height: 100px; }
+    .admin-form-actions { display: flex; gap: .7rem; margin-top: 1rem; padding-top: 1rem; border-top: 1.5px solid var(--grey-light); }
+    .admin-btn { padding: .65rem 1.5rem; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; border: 2px solid transparent; border-radius: var(--radius); cursor: pointer; transition: all .2s; }
+    .admin-btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .admin-btn-primary:hover { background: var(--navy-dark); }
+    .admin-btn-secondary { background: transparent; color: var(--text); border-color: var(--grey-mid); }
+    .admin-btn-secondary:hover { border-color: var(--navy); }
+    .admin-btn-danger { background: var(--red); color: #fff; border-color: var(--red); }
+    .admin-btn-danger:hover { background: var(--red-dark); }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #fff; border-radius: var(--radius); max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: fadeUp .3s both; }
+    .modal-header { padding: 1.2rem 1.5rem; border-bottom: 1.5px solid var(--grey-light); display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { font-size: 1rem; font-weight: 800; color: var(--navy); text-transform: uppercase; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background .2s; }
+    .modal-close:hover { background: var(--off-white); }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1.5px solid var(--grey-light); display: flex; justify-content: flex-end; gap: .7rem; }
+
+    /* Quick Actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .8rem; margin-bottom: 2rem; }
+    .quick-action { background: #fff; padding: 1.2rem; border-radius: var(--radius); border: 1.5px solid var(--grey-light); text-align: center; cursor: pointer; transition: all .2s; }
+    .quick-action:hover { border-color: var(--navy); box-shadow: 0 4px 16px rgba(27,42,107,.1); transform: translateY(-2px); }
+    .quick-action-icon { font-size: 1.8rem; margin-bottom: .5rem; }
+    .quick-action-label { font-size: .72rem; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* Content Editor */
+    .editor-tabs { display: flex; gap: .3rem; margin-bottom: 1rem; border-bottom: 2px solid var(--grey-light); padding-bottom: .5rem; }
+    .editor-tab { padding: .5rem 1.2rem; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: none; border: none; color: var(--text-light); cursor: pointer; border-radius: var(--radius); transition: all .2s; }
+    .editor-tab:hover { color: var(--navy); background: var(--off-white); }
+    .editor-tab.active { color: var(--navy); background: var(--off-white); }
+    .editor-pane { display: none; }
+    .editor-pane.active { display: block; }
+    .code-editor { font-family: 'Courier New', monospace; font-size: .8rem; line-height: 1.6; background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: var(--radius); min-height: 400px; width: 100%; border: none; outline: none; resize: vertical; }
+
+    /* Settings */
+    .settings-group { background: #fff; padding: 1.5rem; border-radius: var(--radius); border: 1.5px solid var(--grey-light); margin-bottom: 1rem; }
+    .settings-group h4 { font-size: .85rem; font-weight: 800; color: var(--navy); text-transform: uppercase; margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1.5px solid var(--grey-light); }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: .7rem 0; border-bottom: 1px solid var(--grey-light); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row label { font-size: .82rem; font-weight: 600; color: var(--text); }
+    .settings-row .hint { font-size: .72rem; color: var(--text-light); margin-top: .15rem; }
+    .toggle { width: 44px; height: 24px; background: var(--grey-mid); border-radius: 50px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+    .toggle.on { background: var(--navy); }
+    .toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .toggle.on::after { transform: translateX(20px); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy); color: #fff; padding: 1rem 1.5rem; border-radius: var(--radius); font-size: .85rem; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.2); z-index: 9999; transform: translateY(100px); opacity: 0; transition: all .4s var(--ease); display: flex; align-items: center; gap: .7rem; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #16a34a; }
+    .toast.error { background: var(--red); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar { display: none; }
+      .admin-form-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .data-table-wrap { overflow-x: auto; }
+      .data-table { min-width: 600px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="admin-login-wrap">
+    <div class="login-card">
+      <div class="logo">
+        <img src="assets/images/logo-badge.jpg" alt="Al Azhar Tex" />
+      </div>
+      <h2>Admin Access</h2>
+      <p class="sub">لوحة تحكم الأزهر تكس — Authorized personnel only</p>
+      <div class="login-error" id="login-error">Invalid username or password</div>
+      <div class="login-group">
+        <label for="admin-user">Username</label>
+        <input type="text" id="admin-user" placeholder="Enter username" autocomplete="username" />
+      </div>
+      <div class="login-group">
+        <label for="admin-pass">Password</label>
+        <input type="password" id="admin-pass" placeholder="Enter password" autocomplete="current-password" />
+      </div>
+      <button class="login-btn" id="login-btn">Sign In →</button>
+      <p style="text-align:center;margin-top:1rem;font-size:.7rem;color:var(--text-light);">
+        <a href="index.html" style="color:var(--navy);font-weight:700;">← Back to Website</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="admin-dashboard">
+    <header class="admin-header">
+      <div class="container admin-header-inner">
+        <div class="logo-sm">
+          <img src="assets/images/logo-badge.jpg" alt="Al Azhar Tex" />
+          <span>Admin Panel</span>
+        </div>
+        <div class="admin-user">
+          <span id="admin-username-display">Admin</span>
+          <button class="logout-btn" id="logout-btn">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-layout">
+      <!-- Sidebar -->
+      <aside class="admin-sidebar">
+        <div class="sidebar-label">Main</div>
+        <ul class="sidebar-menu">
+          <li><a href="#" class="active" data-section="overview">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            Overview
+          </a></li>
+          <li><a href="#" data-section="enquiries">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Enquiries <span id="enquiry-count" style="margin-left:auto;background:var(--red);color:#fff;font-size:.6rem;padding:.15rem .4rem;border-radius:50px;">0</span>
+          </a></li>
+          <li><a href="#" data-section="products">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Products
+          </a></li>
+          <li><a href="#" data-section="gallery">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            Gallery
+          </a></li>
+          <li><a href="#" data-section="content">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Content Editor
+          </a></li>
+        </ul>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-label">Configuration</div>
+        <ul class="sidebar-menu">
+          <li><a href="#" data-section="settings">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Settings
+          </a></li>
+          <li><a href="#" data-section="users">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Admin Users
+          </a></li>
+        </ul>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-label">Links</div>
+        <ul class="sidebar-menu">
+          <li><a href="index.html" target="_blank">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            View Website
+          </a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="admin-main">
+
+        <!-- OVERVIEW -->
+        <section id="section-overview" class="admin-section active">
+          <h2>Dashboard Overview</h2>
+          <p class="section-desc">Welcome back! Here's what's happening with your store today.</p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-icon">📩</div>
+              <div class="stat-card-value" id="stat-enquiries">0</div>
+              <div class="stat-card-label">Total Enquiries</div>
+              <div class="stat-card-change up">↑ New today</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">👁️</div>
+              <div class="stat-card-value" id="stat-views">1,247</div>
+              <div class="stat-card-label">Page Views</div>
+              <div class="stat-card-change up">↑ 12% this week</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">📦</div>
+              <div class="stat-card-value" id="stat-products">22</div>
+              <div class="stat-card-label">Active Products</div>
+              <div class="stat-card-change up">↑ All in stock</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">💬</div>
+              <div class="stat-card-value" id="stat-wa-clicks">89</div>
+              <div class="stat-card-label">WhatsApp Clicks</div>
+              <div class="stat-card-change up">↑ High intent</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:1rem;font-weight:800;color:var(--navy);text-transform:uppercase;margin:2rem 0 1rem;">Quick Actions</h3>
+          <div class="quick-actions">
+            <div class="quick-action" onclick="adminApp.openSection('enquiries')">
+              <div class="quick-action-icon">📨</div>
+              <div class="quick-action-label">View Enquiries</div>
+            </div>
+            <div class="quick-action" onclick="adminApp.openSection('products')">
+              <div class="quick-action-icon">➕</div>
+              <div class="quick-action-label">Add Product</div>
+            </div>
+            <div class="quick-action" onclick="adminApp.openSection('gallery')">
+              <div class="quick-action-icon">🖼️</div>
+              <div class="quick-action-label">Manage Gallery</div>
+            </div>
+            <div class="quick-action" onclick="adminApp.openSection('content')">
+              <div class="quick-action-icon">✏️</div>
+              <div class="quick-action-label">Edit Content</div>
+            </div>
+            <div class="quick-action" onclick="adminApp.openSection('settings')">
+              <div class="quick-action-icon">⚙️</div>
+              <div class="quick-action-label">Settings</div>
+            </div>
+            <div class="quick-action" onclick="window.open('https://wa.me/201003600949','_blank')">
+              <div class="quick-action-icon">💬</div>
+              <div class="quick-action-label">WhatsApp Business</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:1rem;font-weight:800;color:var(--navy);text-transform:uppercase;margin:2rem 0 1rem;">Recent Activity</h3>
+          <div class="data-table-wrap">
+            <table class="data-table" id="activity-table">
+              <thead><tr><th>Time</th><th>Action</th><th>Details</th><th>Status</th></tr></thead>
+              <tbody id="activity-body">
+                <tr><td>Just now</td><td>Page loaded</td><td>Admin dashboard accessed</td><td><span class="status-badge status-replied">Active</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ENQUIRIES -->
+        <section id="section-enquiries" class="admin-section">
+          <h2>Customer Enquiries</h2>
+          <p class="section-desc">All form submissions and WhatsApp enquiries. Manage and respond to leads.</p>
+          <div class="admin-form-actions" style="margin-bottom:1rem;">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.exportEnquiries()">📥 Export CSV</button>
+            <button class="admin-btn admin-btn-secondary" onclick="adminApp.clearAllEnquiries()">🗑️ Clear All</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Date</th><th>Name</th><th>Phone</th><th>Fabric</th><th>Quantity</th><th>City</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="enquiries-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+          <p id="no-enquiries" style="text-align:center;padding:2rem;color:var(--text-light);font-size:.9rem;display:none;">No enquiries yet. They will appear here when customers submit the contact form.</p>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="section-products" class="admin-section">
+          <h2>Product Management</h2>
+          <p class="section-desc">Add, edit, or remove fabric products from your catalogue.</p>
+          <div class="admin-form-actions" style="margin-bottom:1rem;">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.openProductModal()">➕ Add New Product</button>
+            <button class="admin-btn admin-btn-secondary" onclick="adminApp.saveProducts()">💾 Save Changes</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Image</th><th>Name</th><th>Arabic</th><th>Category</th><th>Type</th><th>Badge</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="products-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- GALLERY -->
+        <section id="section-gallery" class="admin-section">
+          <h2>Gallery Manager</h2>
+          <p class="section-desc">Manage gallery images, captions, and visibility.</p>
+          <div class="admin-form-actions" style="margin-bottom:1rem;">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.openGalleryModal()">➕ Add Image</button>
+            <button class="admin-btn admin-btn-secondary" onclick="adminApp.saveGallery()">💾 Save Changes</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Preview</th><th>Filename</th><th>Caption (EN)</th><th>Caption (AR)</th><th>Span</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="gallery-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- CONTENT EDITOR -->
+        <section id="section-content" class="admin-section">
+          <h2>Content Editor</h2>
+          <p class="section-desc">Edit website content directly. Select a page to edit its HTML structure.</p>
+          <div class="editor-tabs">
+            <button class="editor-tab active" data-page="index">Homepage</button>
+            <button class="editor-tab" data-page="products">Products</button>
+            <button class="editor-tab" data-page="about">About</button>
+            <button class="editor-tab" data-page="contact">Contact</button>
+            <button class="editor-tab" data-page="gallery">Gallery</button>
+          </div>
+          <div class="admin-form-actions" style="margin-bottom:1rem;">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.saveContent()">💾 Save Changes</button>
+            <button class="admin-btn admin-btn-secondary" onclick="adminApp.previewContent()">👁️ Preview</button>
+            <button class="admin-btn admin-btn-danger" onclick="adminApp.resetContent()">↺ Reset to Default</button>
+          </div>
+          <div id="editor-panes">
+            <div class="editor-pane active" data-page="index">
+              <div class="admin-form-group">
+                <label>Hero Title</label>
+                <input type="text" id="edit-hero-title" value="Egypt's Finest Wholesale Fabrics" />
+              </div>
+              <div class="admin-form-group">
+                <label>Hero Arabic Text</label>
+                <input type="text" id="edit-hero-ar" value="الأزهر تكس — للأقمشة والمنسوجات بالجملة" />
+              </div>
+              <div class="admin-form-group">
+                <label>Hero Subtitle</label>
+                <textarea id="edit-hero-sub">From chiffon to satin, Warsaw to Lexus — Al Azhar Tex brings 20+ premium fabric lines to wholesale buyers across Egypt.</textarea>
+              </div>
+              <div class="admin-form-group">
+                <label>About Excerpt</label>
+                <textarea id="edit-about-excerpt">Founded by Shady Anwar in the heart of Zagazig, Al Azhar Tex has become one of Egypt's most trusted wholesale fabric suppliers.</textarea>
+              </div>
+            </div>
+            <div class="editor-pane" data-page="products">
+              <div class="admin-form-group">
+                <label>Page Title</label>
+                <input type="text" id="edit-products-title" value="Our Fabric Lines" />
+              </div>
+              <div class="admin-form-group">
+                <label>Page Description</label>
+                <textarea id="edit-products-desc">20+ premium fabric lines available wholesale. All rolls in-stock at our Zagazig gallery.</textarea>
+              </div>
+            </div>
+            <div class="editor-pane" data-page="about">
+              <div class="admin-form-group">
+                <label>Founder Name</label>
+                <input type="text" id="edit-founder" value="Shady Anwar" />
+              </div>
+              <div class="admin-form-group">
+                <label>Story Text</label>
+                <textarea id="edit-story">Founded by Shady Anwar in the heart of Zagazig, Al Azhar Tex has grown from a modest fabric gallery into one of Egypt's most trusted wholesale fabric suppliers.</textarea>
+              </div>
+              <div class="admin-form-group">
+                <label>Quote</label>
+                <textarea id="edit-quote">I don't just sell fabric. I sell the confidence a woman feels when she wears it.</textarea>
+              </div>
+            </div>
+            <div class="editor-pane" data-page="contact">
+              <div class="admin-form-group">
+                <label>Phone Number</label>
+                <input type="text" id="edit-phone" value="+20 100 360 0949" />
+              </div>
+              <div class="admin-form-group">
+                <label>WhatsApp Number</label>
+                <input type="text" id="edit-whatsapp" value="201003600949" />
+              </div>
+              <div class="admin-form-group">
+                <label>Email</label>
+                <input type="text" id="edit-email" value="info@alazhartex.com" />
+              </div>
+              <div class="admin-form-group">
+                <label>Address</label>
+                <input type="text" id="edit-address" value="Zagazig, Al Sharqia, Egypt" />
+              </div>
+              <div class="admin-form-group">
+                <label>Working Hours</label>
+                <input type="text" id="edit-hours" value="Sun–Thu & Sat: 11 AM – 7 PM | Friday: Closed" />
+              </div>
+            </div>
+            <div class="editor-pane" data-page="gallery">
+              <div class="admin-form-group">
+                <label>Gallery Title</label>
+                <input type="text" id="edit-gallery-title" value="Fabric Showroom" />
+              </div>
+              <div class="admin-form-group">
+                <label>Gallery Description</label>
+                <textarea id="edit-gallery-desc">Real fabric samples and display shots from our Zagazig gallery.</textarea>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="section-settings" class="admin-section">
+          <h2>Website Settings</h2>
+          <p class="section-desc">Configure global settings for your website.</p>
+
+          <div class="settings-group">
+            <h4>General</h4>
+            <div class="settings-row">
+              <div>
+                <label>Website Title</label>
+                <div class="hint">Appears in browser tab and search results</div>
+              </div>
+              <input type="text" id="setting-title" value="Al Azhar Tex — Fine Fabrics Wholesale" style="width:280px;padding:.5rem .8rem;border:1.5px solid var(--grey-mid);border-radius:var(--radius);font-family:var(--font-main);" />
+            </div>
+            <div class="settings-row">
+              <div>
+                <label>Meta Description</label>
+                <div class="hint">SEO description for search engines</div>
+              </div>
+              <input type="text" id="setting-desc" value="Al Azhar Tex — Egypt's trusted wholesale fabric supplier. Chiffon, Satin, Rotana, Warsaw, Lexus and more." style="width:280px;padding:.5rem .8rem;border:1.5px solid var(--grey-mid);border-radius:var(--radius);font-family:var(--font-main);" />
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h4>Contact & Social</h4>
+            <div class="settings-row">
+              <div>
+                <label>Facebook URL</label>
+                <div class="hint">Link in footer</div>
+              </div>
+              <input type="text" id="setting-fb" value="#" style="width:280px;padding:.5rem .8rem;border:1.5px solid var(--grey-mid);border-radius:var(--radius);font-family:var(--font-main);" />
+            </div>
+            <div class="settings-row">
+              <div>
+                <label>Instagram URL</label>
+                <div class="hint">Link in footer</div>
+              </div>
+              <input type="text" id="setting-ig" value="#" style="width:280px;padding:.5rem .8rem;border:1.5px solid var(--grey-mid);border-radius:var(--radius);font-family:var(--font-main);" />
+            </div>
+            <div class="settings-row">
+              <div>
+                <label>Google Maps Embed URL</label>
+                <div class="hint">Contact page map</div>
+              </div>
+              <input type="text" id="setting-maps" value="https://maps.google.com/maps?q=Zagazig,+Al+Sharqia,+Egypt&t=&z=14&ie=UTF8&iwloc=&output=embed" style="width:280px;padding:.5rem .8rem;border:1.5px solid var(--grey-mid);border-radius:var(--radius);font-family:var(--font-main);" />
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h4>Features</h4>
+            <div class="settings-row">
+              <div>
+                <label>WhatsApp Floating Button</label>
+                <div class="hint">Show on all pages</div>
+              </div>
+              <div class="toggle on" id="toggle-wa" onclick="adminApp.toggle(this)"></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <label>Promo Strip Marquee</label>
+                <div class="hint">Top announcement banner</div>
+              </div>
+              <div class="toggle on" id="toggle-strip" onclick="adminApp.toggle(this)"></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <label>Netlify Forms</label>
+                <div class="hint">Capture enquiries to dashboard</div>
+              </div>
+              <div class="toggle on" id="toggle-forms" onclick="adminApp.toggle(this)"></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <label>Maintenance Mode</label>
+                <div class="hint">Show coming soon page</div>
+              </div>
+              <div class="toggle" id="toggle-maint" onclick="adminApp.toggle(this)"></div>
+            </div>
+          </div>
+
+          <div class="admin-form-actions">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.saveSettings()">💾 Save Settings</button>
+            <button class="admin-btn admin-btn-secondary" onclick="adminApp.loadSettings()">↺ Reset</button>
+          </div>
+        </section>
+
+        <!-- ADMIN USERS -->
+        <section id="section-users" class="admin-section">
+          <h2>Admin Users</h2>
+          <p class="section-desc">Manage who can access this admin panel.</p>
+          <div class="admin-form-actions" style="margin-bottom:1rem;">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.openUserModal()">➕ Add User</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Username</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="users-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: Add/Edit Product -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="product-modal-title">Add Product</h3>
+        <button class="modal-close" onclick="adminApp.closeModal('product-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label>Product Name</label>
+            <input type="text" id="prod-name" placeholder="e.g. Warsaw" />
+          </div>
+          <div class="admin-form-group">
+            <label>Arabic Name</label>
+            <input type="text" id="prod-ar" placeholder="e.g. ورسو" />
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label>Category</label>
+            <select id="prod-cat">
+              <option value="special">Special Weaves</option>
+              <option value="chiffon">Chiffon</option>
+              <option value="satin">Satin</option>
+              <option value="rotana">Rotana</option>
+              <option value="fursan">Fursan</option>
+              <option value="stretch">Stretch & Knit</option>
+              <option value="premium">Premium Lines</option>
+            </select>
+          </div>
+          <div class="admin-form-group">
+            <label>Type / Description</label>
+            <input type="text" id="prod-type" placeholder="e.g. Special Weave · Wholesale Roll" />
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label>Image Path</label>
+            <input type="text" id="prod-img" placeholder="assets/images/..." value="assets/images/fabric-dark-2.jpg" />
+          </div>
+          <div class="admin-form-group">
+            <label>Badge</label>
+            <select id="prod-badge">
+              <option value="">None</option>
+              <option value="New">New</option>
+              <option value="Featured">Featured</option>
+              <option value="Bestseller">Bestseller</option>
+              <option value="Popular">Popular</option>
+              <option value="Hot">Hot</option>
+              <option value="Premium">Premium</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="admin-btn admin-btn-secondary" onclick="adminApp.closeModal('product-modal')">Cancel</button>
+        <button class="admin-btn admin-btn-primary" onclick="adminApp.saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add/Edit Gallery Image -->
+  <div class="modal-overlay" id="gallery-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Add Gallery Image</h3>
+        <button class="modal-close" onclick="adminApp.closeModal('gallery-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="admin-form-group">
+          <label>Image Path</label>
+          <input type="text" id="gal-img" placeholder="assets/images/..." />
+        </div>
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label>Caption (English)</label>
+            <input type="text" id="gal-cap-en" placeholder="e.g. Store Display" />
+          </div>
+          <div class="admin-form-group">
+            <label>Caption (Arabic)</label>
+            <input type="text" id="gal-cap-ar" placeholder="e.g. عرض المتجر" />
+          </div>
+        </div>
+        <div class="admin-form-group">
+          <label>Grid Span</label>
+          <select id="gal-span">
+            <option value="">Normal (1x1)</option>
+            <option value="span2">Wide (2x1)</option>
+            <option value="tall">Tall (1x2)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="admin-btn admin-btn-secondary" onclick="adminApp.closeModal('gallery-modal')">Cancel</button>
+        <button class="admin-btn admin-btn-primary" onclick="adminApp.saveGalleryItem()">Add Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add User -->
+  <div class="modal-overlay" id="user-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Add Admin User</h3>
+        <button class="modal-close" onclick="adminApp.closeModal('user-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="admin-form-group">
+          <label>Username</label>
+          <input type="text" id="new-username" placeholder="Enter username" />
+        </div>
+        <div class="admin-form-group">
+          <label>Password</label>
+          <input type="password" id="new-password" placeholder="Enter password" />
+        </div>
+        <div class="admin-form-group">
+          <label>Role</label>
+          <select id="new-role">
+            <option value="admin">Admin (Full Access)</option>
+            <option value="editor">Editor (Content Only)</option>
+            <option value="viewer">Viewer (Read Only)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="admin-btn admin-btn-secondary" onclick="adminApp.closeModal('user-modal')">Cancel</button>
+        <button class="admin-btn admin-btn-primary" onclick="adminApp.addUser()">Add User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
