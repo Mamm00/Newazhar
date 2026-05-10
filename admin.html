@@ -197,7 +197,7 @@
         <label for="admin-pass">Password</label>
         <input type="password" id="admin-pass" placeholder="Enter password" autocomplete="current-password" />
       </div>
-      <button class="login-btn" id="login-btn">Sign In →</button>
+      <button type="button" class="login-btn" id="login-btn" onclick="adminApp && adminApp.handleLogin ? adminApp.handleLogin() : console.log('adminApp not ready')">Sign In →</button>
       <p style="text-align:center;margin-top:1rem;font-size:.7rem;color:var(--text-light);">
         <a href="index.html" style="color:var(--navy);font-weight:700;">← Back to Website</a>
       </p>
