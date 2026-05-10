@@ -150,6 +150,21 @@
     .toast.success { background: #16a34a; }
     .toast.error { background: var(--red); }
 
+    /* Image Upload Area */
+    .upload-area { border: 2px dashed var(--grey-mid); border-radius: var(--radius); padding: 2rem; text-align: center; background: var(--off-white); transition: all .2s; cursor: pointer; }
+    .upload-area:hover { border-color: var(--navy); background: rgba(27,42,107,.03); }
+    .upload-area.has-file { border-color: #16a34a; background: rgba(22,163,74,.05); }
+    .upload-area input[type="file"] { display: none; }
+    .upload-preview { max-width: 200px; max-height: 200px; border-radius: var(--radius); margin-top: 1rem; display: none; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+
+    /* Image Picker Grid */
+    .image-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .8rem; max-height: 400px; overflow-y: auto; padding: .5rem; }
+
+    /* GitHub Settings */
+    .github-config { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: var(--radius); padding: 1.5rem; margin-top: 1rem; }
+    .github-config h5 { font-size: .8rem; font-weight: 800; color: var(--navy); text-transform: uppercase; margin-bottom: 1rem; }
+    .token-field { font-family: 'Courier New', monospace; letter-spacing: .05em; }
+
     /* Responsive */
     @media (max-width: 900px) {
       .admin-layout { grid-template-columns: 1fr; }
@@ -225,6 +240,10 @@
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
             Gallery
           </a></li>
+          <li><a href="#" data-section="images">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            Image Manager
+          </a></li>
           <li><a href="#" data-section="content">
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Content Editor
@@ -279,10 +298,10 @@
               <div class="stat-card-change up">↑ All in stock</div>
             </div>
             <div class="stat-card">
-              <div class="stat-card-icon">💬</div>
-              <div class="stat-card-value" id="stat-wa-clicks">89</div>
-              <div class="stat-card-label">WhatsApp Clicks</div>
-              <div class="stat-card-change up">↑ High intent</div>
+              <div class="stat-card-icon">🖼️</div>
+              <div class="stat-card-value" id="stat-images">0</div>
+              <div class="stat-card-label">Stored Images</div>
+              <div class="stat-card-change up">↑ Local storage</div>
             </div>
           </div>
 
@@ -299,6 +318,10 @@
             <div class="quick-action" onclick="adminApp.openSection('gallery')">
               <div class="quick-action-icon">🖼️</div>
               <div class="quick-action-label">Manage Gallery</div>
+            </div>
+            <div class="quick-action" onclick="adminApp.openSection('images')">
+              <div class="quick-action-icon">📤</div>
+              <div class="quick-action-label">Upload Images</div>
             </div>
             <div class="quick-action" onclick="adminApp.openSection('content')">
               <div class="quick-action-icon">✏️</div>
@@ -384,6 +407,63 @@
               </tbody>
             </table>
           </div>
+        </section>
+
+        <!-- IMAGE MANAGER -->
+        <section id="section-images" class="admin-section">
+          <h2>Image Manager</h2>
+          <p class="section-desc">Upload images from your computer, manage storage, and sync to GitHub.</p>
+
+          <div class="stats-grid" style="margin-bottom:1.5rem;">
+            <div class="stat-card">
+              <div class="stat-card-icon">🖼️</div>
+              <div class="stat-card-value" id="stat-images">0</div>
+              <div class="stat-card-label">Stored Images</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">💾</div>
+              <div class="stat-card-value" id="stat-storage">0</div>
+              <div class="stat-card-label">Storage Used (KB)</div>
+            </div>
+          </div>
+
+          <!-- Upload Area -->
+          <div class="admin-form" style="margin-bottom:2rem;">
+            <h4 style="font-size:.85rem;font-weight:800;color:var(--navy);text-transform:uppercase;margin-bottom:1rem;">Upload New Image</h4>
+            <label class="upload-area" id="upload-dropzone" onclick="document.getElementById('image-upload').click()">
+              <input type="file" id="image-upload" accept="image/*" />
+              <div style="font-size:2rem;margin-bottom:.5rem;">📤</div>
+              <div style="font-size:.85rem;font-weight:600;color:var(--navy);">Click to select or drag image here</div>
+              <div style="font-size:.72rem;color:var(--text-light);margin-top:.3rem;">JPG, PNG, WEBP — Max 5MB</div>
+              <img id="upload-preview" class="upload-preview" alt="Preview" />
+            </label>
+            <div class="admin-form-group" style="margin-top:1rem;">
+              <label>Image Name (optional)</label>
+              <input type="text" id="upload-name" placeholder="e.g. Warsaw Collection" />
+            </div>
+            <div class="admin-form-actions">
+              <button class="admin-btn admin-btn-primary" onclick="adminApp.saveUploadedImage()">💾 Save to Storage</button>
+              <button class="admin-btn admin-btn-secondary" onclick="adminApp.openSection('settings')">⚙️ Configure GitHub</button>
+            </div>
+          </div>
+
+          <!-- Stored Images Table -->
+          <h3 style="font-size:1rem;font-weight:800;color:var(--navy);text-transform:uppercase;margin:2rem 0 1rem;">Stored Images</h3>
+          <div class="admin-form-actions" style="margin-bottom:1rem;">
+            <button class="admin-btn admin-btn-primary" onclick="adminApp.syncAllImagesToGitHub()">☁️ Sync All to GitHub</button>
+            <button class="admin-btn admin-btn-secondary" onclick="if(confirm('Delete ALL images?')){localStorage.removeItem('alazhar_images');adminApp.renderImages();adminApp.showToast('All images cleared','success');}">🗑️ Clear All</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Preview</th><th>Name</th><th>Size</th><th>Type</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="images-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+          <p id="no-images" style="text-align:center;padding:2rem;color:var(--text-light);font-size:.9rem;display:none;">No images uploaded yet. Use the upload area above to add images.</p>
         </section>
 
         <!-- CONTENT EDITOR -->
@@ -560,6 +640,52 @@
             </div>
           </div>
 
+          <!-- GitHub Integration -->
+          <div class="settings-group">
+            <h4>☁️ GitHub Integration</h4>
+            <p style="font-size:.78rem;color:var(--text-light);margin-bottom:1rem;">Automatically sync uploaded images to your GitHub repository. Images will be stored in <code>assets/images/</code> and accessible via raw GitHub URLs.</p>
+
+            <div class="github-config">
+              <div class="admin-form-group">
+                <label style="display:flex;align-items:center;gap:.5rem;">
+                  <input type="checkbox" id="gh-enabled" style="width:auto;" />
+                  Enable GitHub Auto-Sync
+                </label>
+              </div>
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Personal Access Token</label>
+                  <input type="password" id="gh-token" class="token-field" placeholder="ghp_xxxxxxxxxxxx" />
+                  <div class="hint">Create at GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)</div>
+                </div>
+                <div class="admin-form-group">
+                  <label>Repository Owner</label>
+                  <input type="text" id="gh-owner" placeholder="e.g. shadyanwar" />
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Repository Name</label>
+                  <input type="text" id="gh-repo" placeholder="e.g. alazhartex-website" />
+                </div>
+                <div class="admin-form-group">
+                  <label>Branch</label>
+                  <input type="text" id="gh-branch" placeholder="main" value="main" />
+                </div>
+              </div>
+              <div class="admin-form-group">
+                <label>Path Prefix</label>
+                <input type="text" id="gh-path" placeholder="assets/images/" value="assets/images/" />
+                <div class="hint">Where images will be stored in your repo. Must end with /</div>
+              </div>
+              <div class="admin-form-actions">
+                <button class="admin-btn admin-btn-primary" onclick="adminApp.saveGitHubSettings()">💾 Save GitHub Config</button>
+                <button class="admin-btn admin-btn-secondary" onclick="adminApp.loadGitHubSettings()">↺ Reset</button>
+                <button class="admin-btn admin-btn-secondary" onclick="adminApp.testGitHubConnection()">🔗 Test Connection</button>
+              </div>
+            </div>
+          </div>
+
           <div class="admin-form-actions">
             <button class="admin-btn admin-btn-primary" onclick="adminApp.saveSettings()">💾 Save Settings</button>
             <button class="admin-btn admin-btn-secondary" onclick="adminApp.loadSettings()">↺ Reset</button>
@@ -627,8 +753,13 @@
         </div>
         <div class="admin-form-row">
           <div class="admin-form-group">
-            <label>Image Path</label>
-            <input type="text" id="prod-img" placeholder="assets/images/..." value="assets/images/fabric-dark-2.jpg" />
+            <label>Image</label>
+            <input type="text" id="prod-img" placeholder="assets/images/... or URL" value="assets/images/fabric-dark-2.jpg" />
+            <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+              <button type="button" class="admin-btn admin-btn-secondary" style="padding:.4rem 1rem;font-size:.65rem;" onclick="adminApp.openImagePicker('prod-img')">🖼️ Pick from Storage</button>
+              <button type="button" class="admin-btn admin-btn-secondary" style="padding:.4rem 1rem;font-size:.65rem;" onclick="adminApp.useExternalUrl('prod-img')">🔗 External URL</button>
+            </div>
+            <img id="prod-img-preview" style="max-width:120px;max-height:120px;border-radius:var(--radius);margin-top:.5rem;display:none;box-shadow:0 2px 8px rgba(0,0,0,.1);" />
           </div>
           <div class="admin-form-group">
             <label>Badge</label>
@@ -660,8 +791,13 @@
       </div>
       <div class="modal-body">
         <div class="admin-form-group">
-          <label>Image Path</label>
-          <input type="text" id="gal-img" placeholder="assets/images/..." />
+          <label>Image</label>
+          <input type="text" id="gal-img" placeholder="assets/images/... or URL" />
+          <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+            <button type="button" class="admin-btn admin-btn-secondary" style="padding:.4rem 1rem;font-size:.65rem;" onclick="adminApp.openImagePicker('gal-img')">🖼️ Pick from Storage</button>
+            <button type="button" class="admin-btn admin-btn-secondary" style="padding:.4rem 1rem;font-size:.65rem;" onclick="adminApp.useExternalUrl('gal-img')">🔗 External URL</button>
+          </div>
+          <img id="gal-img-preview" style="max-width:120px;max-height:120px;border-radius:var(--radius);margin-top:.5rem;display:none;box-shadow:0 2px 8px rgba(0,0,0,.1);" />
         </div>
         <div class="admin-form-row">
           <div class="admin-form-group">
@@ -685,6 +821,25 @@
       <div class="modal-footer">
         <button class="admin-btn admin-btn-secondary" onclick="adminApp.closeModal('gallery-modal')">Cancel</button>
         <button class="admin-btn admin-btn-primary" onclick="adminApp.saveGalleryItem()">Add Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Image Picker -->
+  <div class="modal-overlay" id="image-picker-overlay">
+    <div class="modal-box" style="max-width:700px;">
+      <div class="modal-header">
+        <h3>Select Image</h3>
+        <button class="modal-close" onclick="adminApp.closeModal('image-picker-overlay')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="image-picker-grid" id="image-picker-body">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="admin-btn admin-btn-secondary" onclick="adminApp.closeModal('image-picker-overlay')">Cancel</button>
+        <button class="admin-btn admin-btn-primary" onclick="var t=document.getElementById('image-picker-overlay').dataset.targetField;adminApp.useExternalUrl(t)">🔗 Use External URL</button>
       </div>
     </div>
   </div>
