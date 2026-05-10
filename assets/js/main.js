@@ -165,9 +165,27 @@ document.addEventListener('DOMContentLoaded', function() {
 function initAdminSystem() {
   'use strict';
 
+  // Check if localStorage is available
+  var storageAvailable = false;
+  try {
+    var test = '__storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    storageAvailable = true;
+  } catch(e) {
+    console.error('localStorage not available:', e);
+    alert('Your browser does not support localStorage or it is disabled. The admin panel requires localStorage to function.');
+    return;
+  }
+
   // Only run if we're on the admin page
   var loginScreen = document.getElementById('login-screen');
-  if(!loginScreen) return; // Not on admin page
+  if(!loginScreen) {
+    console.log('Not on admin page - login-screen not found');
+    return;
+  }
+
+  console.log('Admin system initializing...');
 
   // Default credentials
   var DEFAULT_USERS = [
@@ -813,29 +831,41 @@ function initAdminSystem() {
 
   // Check existing session on load
   function checkSession() {
+    console.log('Checking existing session...');
     var session = AdminSystem.checkAuth();
     if(session) {
+      console.log('Session found, showing dashboard for:', session.username);
       showDashboard(session);
+    } else {
+      console.log('No valid session found, showing login screen');
     }
   }
 
   // Login handler
   function handleLogin() {
+    console.log('Login button clicked');
     var usernameInput = document.getElementById('admin-user');
     var passwordInput = document.getElementById('admin-pass');
     var username = usernameInput ? usernameInput.value.trim() : '';
     var password = passwordInput ? passwordInput.value : '';
+
+    console.log('Username entered:', username);
 
     if(!username || !password) {
       showLoginError('Please enter both username and password');
       return;
     }
 
+    console.log('Attempting login...');
     var result = AdminSystem.login(username, password);
+    console.log('Login result:', result);
+
     if(result.success) {
+      console.log('Login successful, showing dashboard');
       showDashboard(result.user);
     } else {
-      showLoginError('Invalid username or password');
+      console.log('Login failed:', result.error);
+      showLoginError(result.error || 'Invalid username or password');
     }
   }
 
@@ -850,15 +880,27 @@ function initAdminSystem() {
   }
 
   function showDashboard(user) {
+    console.log('Showing dashboard for user:', user ? user.username : 'unknown');
     var loginScreenEl = document.getElementById('login-screen');
-    if(loginScreenEl) loginScreenEl.style.display = 'none';
-    if(dashboard) dashboard.classList.add('active');
+    if(loginScreenEl) {
+      loginScreenEl.style.display = 'none';
+      console.log('Login screen hidden');
+    } else {
+      console.error('Login screen element not found');
+    }
+
+    if(dashboard) {
+      dashboard.classList.add('active');
+      console.log('Dashboard activated');
+    } else {
+      console.error('Dashboard element not found');
+    }
 
     var usernameDisplay = document.getElementById('admin-username-display');
-    if(usernameDisplay) usernameDisplay.textContent = user.username;
+    if(usernameDisplay) usernameDisplay.textContent = user ? user.username : 'Admin';
 
     loadSection('overview');
-    showToast('Welcome back, ' + user.username + '!', 'success');
+    showToast('Welcome back, ' + (user ? user.username : 'Admin') + '!', 'success');
   }
 
   function handleLogout() {
@@ -1870,7 +1912,8 @@ function initAdminSystem() {
     selectImageForField: selectImageForField,
     useExternalUrl: useExternalUrl,
     // Utilities
-    showToast: showToast
+    showToast: showToast,
+    handleLogin: handleLogin
   };
 
 } // end initAdminSystem
