@@ -1,7 +1,8 @@
 'use strict';
 
 /* ============================================================
-   Al Azhar Tex — main.js  (Admin Panel Enabled)
+   Al Azhar Tex — main.js  (Admin Panel + Image Manager)
+   v2.0 — Fixed deletion bugs, added image upload & GitHub sync
    ============================================================ */
 
 // Wait for DOM to be fully loaded before running anything
@@ -182,7 +183,9 @@ function initAdminSystem() {
     GALLERY: 'alazhar_gallery',
     SETTINGS: 'alazhar_settings',
     CONTENT: 'alazhar_content',
-    ACTIVITY: 'alazhar_activity'
+    ACTIVITY: 'alazhar_activity',
+    IMAGES: 'alazhar_images',           // NEW: base64 stored images
+    GITHUB_CONFIG: 'alazhar_github'      // NEW: GitHub API config
   };
 
   // Initialize storage
@@ -207,6 +210,19 @@ function initAdminSystem() {
     }
     if(!localStorage.getItem(STORAGE_KEYS.ACTIVITY)) {
       localStorage.setItem(STORAGE_KEYS.ACTIVITY, JSON.stringify([]));
+    }
+    if(!localStorage.getItem(STORAGE_KEYS.IMAGES)) {
+      localStorage.setItem(STORAGE_KEYS.IMAGES, JSON.stringify([]));
+    }
+    if(!localStorage.getItem(STORAGE_KEYS.GITHUB_CONFIG)) {
+      localStorage.setItem(STORAGE_KEYS.GITHUB_CONFIG, JSON.stringify({
+        enabled: false,
+        token: '',
+        owner: '',
+        repo: '',
+        branch: 'main',
+        pathPrefix: 'assets/images/'
+      }));
     }
   }
 
@@ -274,7 +290,7 @@ function initAdminSystem() {
       productsTitle: 'Our Fabric Lines',
       productsDesc: '20+ premium fabric lines available wholesale. All rolls in-stock at our Zagazig gallery.',
       founder: 'Shady Anwar',
-      story: 'Founded by Shady Anwar in the heart of Zagazig, Al Azhar Tex has grown from a modest fabric gallery into one of Egypt\'s most trusted wholesale fabric suppliers.',
+      story: 'Founded by Shady Anwar in the heart of Zagazig, Al Azhar Tex has grown from a modest fabric gallery into one of Egypt's most trusted wholesale fabric suppliers.',
       quote: "I don't just sell fabric. I sell the confidence a woman feels when she wears it.",
       phone: '+20 100 360 0949',
       whatsapp: '201003600949',
@@ -292,12 +308,22 @@ function initAdminSystem() {
       var item = localStorage.getItem(key);
       return item ? JSON.parse(item) : [];
     } catch(e) {
+      console.error('Storage get error:', e);
       return [];
     }
   }
 
   function set(key, val) {
-    localStorage.setItem(key, JSON.stringify(val));
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+      return true;
+    } catch(e) {
+      console.error('Storage set error:', e);
+      if(e.name === 'QuotaExceededError') {
+        alert('Storage full! Please delete some images or clear old data.');
+      }
+      return false;
+    }
   }
 
   function addActivity(action, details) {
@@ -312,7 +338,7 @@ function initAdminSystem() {
     set(STORAGE_KEYS.ACTIVITY, acts);
   }
 
-  // Auth functions (synchronous, no async/await)
+  // Auth functions
   function login(username, password) {
     var users = get(STORAGE_KEYS.USERS);
     var user = null;
@@ -378,7 +404,7 @@ function initAdminSystem() {
   function updateEnquiryStatus(id, status) {
     var enquiries = get(STORAGE_KEYS.ENQUIRIES);
     for(var i = 0; i < enquiries.length; i++) {
-      if(enquiries[i].id === id) {
+      if(enquiries[i].id == id) {  // FIX: use loose equality to handle type mismatch
         enquiries[i].status = status;
         set(STORAGE_KEYS.ENQUIRIES, enquiries);
         return;
@@ -390,7 +416,7 @@ function initAdminSystem() {
     var enquiries = get(STORAGE_KEYS.ENQUIRIES);
     var filtered = [];
     for(var i = 0; i < enquiries.length; i++) {
-      if(enquiries[i].id !== id) filtered.push(enquiries[i]);
+      if(enquiries[i].id != id) filtered.push(enquiries[i]);  // FIX: loose equality
     }
     set(STORAGE_KEYS.ENQUIRIES, filtered);
   }
@@ -436,7 +462,7 @@ function initAdminSystem() {
   function updateProduct(id, updates) {
     var products = get(STORAGE_KEYS.PRODUCTS);
     for(var i = 0; i < products.length; i++) {
-      if(products[i].id === id) {
+      if(products[i].id == id) {  // FIX: loose equality
         for(var key in updates) {
           products[i][key] = updates[key];
         }
@@ -451,10 +477,10 @@ function initAdminSystem() {
     var prod = null;
     var filtered = [];
     for(var i = 0; i < products.length; i++) {
-      if(products[i].id === id) {
-        prod = products[i];
-      } else {
+      if(products[i].id != id) {  // FIX: loose equality
         filtered.push(products[i]);
+      } else {
+        prod = products[i];
       }
     }
     set(STORAGE_KEYS.PRODUCTS, filtered);
@@ -474,7 +500,7 @@ function initAdminSystem() {
   function updateGalleryItem(id, updates) {
     var gallery = get(STORAGE_KEYS.GALLERY);
     for(var i = 0; i < gallery.length; i++) {
-      if(gallery[i].id === id) {
+      if(gallery[i].id == id) {  // FIX: loose equality
         for(var key in updates) {
           gallery[i][key] = updates[key];
         }
@@ -488,7 +514,7 @@ function initAdminSystem() {
     var gallery = get(STORAGE_KEYS.GALLERY);
     var filtered = [];
     for(var i = 0; i < gallery.length; i++) {
-      if(gallery[i].id !== id) filtered.push(gallery[i]);
+      if(gallery[i].id != id) filtered.push(gallery[i]);  // FIX: loose equality
     }
     set(STORAGE_KEYS.GALLERY, filtered);
     addActivity('Delete Gallery', 'ID: ' + id);
@@ -544,6 +570,190 @@ function initAdminSystem() {
     addActivity('Delete User', username);
   }
 
+  // ============================================================
+  // IMAGE MANAGEMENT SYSTEM (NEW)
+  // ============================================================
+
+  function getImages() {
+    return get(STORAGE_KEYS.IMAGES);
+  }
+
+  function saveImage(imageData) {
+    var images = get(STORAGE_KEYS.IMAGES);
+    var image = {
+      id: 'img_' + Date.now(),
+      name: imageData.name || 'unnamed',
+      originalName: imageData.originalName || 'unnamed',
+      dataUrl: imageData.dataUrl,
+      size: imageData.size || 0,
+      type: imageData.type || 'image/jpeg',
+      uploadedAt: new Date().toISOString(),
+      githubUrl: imageData.githubUrl || null
+    };
+    images.push(image);
+    var ok = set(STORAGE_KEYS.IMAGES, images);
+    if(ok) addActivity('Upload Image', image.name);
+    return ok ? image : null;
+  }
+
+  function deleteImage(id) {
+    var images = get(STORAGE_KEYS.IMAGES);
+    var filtered = [];
+    var deleted = null;
+    for(var i = 0; i < images.length; i++) {
+      if(images[i].id !== id) {
+        filtered.push(images[i]);
+      } else {
+        deleted = images[i];
+      }
+    }
+    set(STORAGE_KEYS.IMAGES, filtered);
+    if(deleted) addActivity('Delete Image', deleted.name);
+    return deleted;
+  }
+
+  function getImageById(id) {
+    var images = get(STORAGE_KEYS.IMAGES);
+    for(var i = 0; i < images.length; i++) {
+      if(images[i].id === id) return images[i];
+    }
+    return null;
+  }
+
+  // GitHub Config
+  function getGitHubConfig() {
+    return get(STORAGE_KEYS.GITHUB_CONFIG);
+  }
+
+  function saveGitHubConfig(config) {
+    set(STORAGE_KEYS.GITHUB_CONFIG, config);
+  }
+
+  // GitHub API: Upload image to repository
+  function uploadToGitHub(filename, base64Content, commitMessage) {
+    return new Promise(function(resolve, reject) {
+      var config = getGitHubConfig();
+      if(!config.enabled || !config.token || !config.owner || !config.repo) {
+        reject(new Error('GitHub not configured'));
+        return;
+      }
+
+      var path = config.pathPrefix + filename;
+      var apiUrl = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + path;
+      var branch = config.branch || 'main';
+
+      // First check if file exists to get SHA for update
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', apiUrl + '?ref=' + branch, true);
+      xhr.setRequestHeader('Authorization', 'token ' + config.token);
+      xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+      xhr.setRequestHeader('X-GitHub-Api-Version', '2022-11-28');
+
+      xhr.onload = function() {
+        var existingSha = null;
+        if(xhr.status === 200) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            existingSha = data.sha;
+          } catch(e) {}
+        }
+
+        // Now create/update the file
+        var body = {
+          message: commitMessage || 'Upload image via Al Azhar Tex Admin',
+          content: base64Content,
+          branch: branch
+        };
+        if(existingSha) body.sha = existingSha;
+
+        var putXhr = new XMLHttpRequest();
+        putXhr.open('PUT', apiUrl, true);
+        putXhr.setRequestHeader('Authorization', 'token ' + config.token);
+        putXhr.setRequestHeader('Content-Type', 'application/json');
+        putXhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+        putXhr.setRequestHeader('X-GitHub-Api-Version', '2022-11-28');
+
+        putXhr.onload = function() {
+          if(putXhr.status === 200 || putXhr.status === 201) {
+            try {
+              var resp = JSON.parse(putXhr.responseText);
+              var rawUrl = 'https://raw.githubusercontent.com/' + config.owner + '/' + config.repo + '/' + branch + '/' + path;
+              resolve({
+                success: true,
+                url: rawUrl,
+                htmlUrl: resp.content ? resp.content.html_url : null,
+                sha: resp.content ? resp.content.sha : null
+              });
+            } catch(e) {
+              reject(new Error('Failed to parse response'));
+            }
+          } else {
+            try {
+              var err = JSON.parse(putXhr.responseText);
+              reject(new Error(err.message || 'GitHub API error: ' + putXhr.status));
+            } catch(e) {
+              reject(new Error('GitHub API error: ' + putXhr.status));
+            }
+          }
+        };
+
+        putXhr.onerror = function() {
+          reject(new Error('Network error connecting to GitHub'));
+        };
+
+        putXhr.send(JSON.stringify(body));
+      };
+
+      xhr.onerror = function() {
+        // File might not exist, try creating anyway
+        var body = {
+          message: commitMessage || 'Upload image via Al Azhar Tex Admin',
+          content: base64Content,
+          branch: branch
+        };
+
+        var putXhr = new XMLHttpRequest();
+        putXhr.open('PUT', apiUrl, true);
+        putXhr.setRequestHeader('Authorization', 'token ' + config.token);
+        putXhr.setRequestHeader('Content-Type', 'application/json');
+        putXhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+        putXhr.setRequestHeader('X-GitHub-Api-Version', '2022-11-28');
+
+        putXhr.onload = function() {
+          if(putXhr.status === 200 || putXhr.status === 201) {
+            try {
+              var resp = JSON.parse(putXhr.responseText);
+              var rawUrl = 'https://raw.githubusercontent.com/' + config.owner + '/' + config.repo + '/' + branch + '/' + path;
+              resolve({
+                success: true,
+                url: rawUrl,
+                htmlUrl: resp.content ? resp.content.html_url : null,
+                sha: resp.content ? resp.content.sha : null
+              });
+            } catch(e) {
+              reject(new Error('Failed to parse response'));
+            }
+          } else {
+            try {
+              var err = JSON.parse(putXhr.responseText);
+              reject(new Error(err.message || 'GitHub API error: ' + putXhr.status));
+            } catch(e) {
+              reject(new Error('GitHub API error: ' + putXhr.status));
+            }
+          }
+        };
+
+        putXhr.onerror = function() {
+          reject(new Error('Network error connecting to GitHub'));
+        };
+
+        putXhr.send(JSON.stringify(body));
+      };
+
+      xhr.send();
+    });
+  }
+
   // Expose AdminSystem globally
   window.AdminSystem = {
     initStorage: initStorage,
@@ -569,12 +779,22 @@ function initAdminSystem() {
     deleteUser: deleteUser,
     getStorageKeys: function() { return STORAGE_KEYS; },
     getData: function(key) { return get(key); },
-    setData: function(key, val) { set(key, val); },
-    addActivity: addActivity
+    setData: function(key, val) { return set(key, val); },
+    addActivity: addActivity,
+    // Image management
+    getImages: getImages,
+    saveImage: saveImage,
+    deleteImage: deleteImage,
+    getImageById: getImageById,
+    // GitHub
+    getGitHubConfig: getGitHubConfig,
+    saveGitHubConfig: saveGitHubConfig,
+    uploadToGitHub: uploadToGitHub
   };
 
   // Initialize storage
   initStorage();
+
 
   // ============================================================
   // ADMIN PANEL UI CONTROLLER
@@ -582,6 +802,8 @@ function initAdminSystem() {
 
   var currentSection = 'overview';
   var editingProductId = null;
+  var editingGalleryId = null;
+  var uploadedImageData = null;  // For temporary storage during add/edit
 
   var dashboard = document.getElementById('dashboard');
   var loginBtn = document.getElementById('login-btn');
@@ -677,6 +899,7 @@ function initAdminSystem() {
       case 'content': renderContent(); break;
       case 'settings': renderSettings(); break;
       case 'users': renderUsers(); break;
+      case 'images': renderImages(); break;  // NEW
     }
   }
 
@@ -748,7 +971,7 @@ function initAdminSystem() {
     var enquiries = AdminSystem.getData(AdminSystem.getStorageKeys().ENQUIRIES);
     var e = null;
     for(var i = 0; i < enquiries.length; i++) {
-      if(enquiries[i].id === id) { e = enquiries[i]; break; }
+      if(enquiries[i].id == id) { e = enquiries[i]; break; }
     }
     if(!e) return;
     alert('Enquiry from ' + e.name + '\nPhone: ' + e.phone + '\nEmail: ' + (e.email || 'N/A') + '\nFabric: ' + e.fabric + '\nQuantity: ' + e.quantity + '\nCity: ' + e.city + '\n\nMessage:\n' + (e.message || 'No message'));
@@ -799,8 +1022,10 @@ function initAdminSystem() {
     if(tbody) {
       tbody.innerHTML = products.map(function(p) {
         var badgeHtml = p.badge ? '<span class="status-badge status-replied">' + p.badge + '</span>' : '—';
+        // Use base64 image if available, otherwise use path
+        var imgSrc = p.img || 'assets/images/fabric-dark-2.jpg';
         return '<tr>' +
-          '<td><img src="' + p.img + '" alt="' + p.name + '" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius);" /></td>' +
+          '<td><img src="' + imgSrc + '" alt="' + p.name + '" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius);" onerror="this.src=\'assets/images/fabric-dark-2.jpg\'" /></td>' +
           '<td><strong>' + p.name + '</strong></td>' +
           '<td class="ar">' + p.ar + '</td>' +
           '<td><span class="status-badge status-new">' + p.category + '</span></td>' +
@@ -819,14 +1044,17 @@ function initAdminSystem() {
 
   function openProductModal(id) {
     editingProductId = id || null;
+    uploadedImageData = null;
     var modal = document.getElementById('product-modal');
     var title = document.getElementById('product-modal-title');
+    var previewEl = document.getElementById('prod-img-preview');
+    if(previewEl) previewEl.style.display = 'none';
 
     if(id) {
       var products = AdminSystem.getData(AdminSystem.getStorageKeys().PRODUCTS);
       var p = null;
       for(var i = 0; i < products.length; i++) {
-        if(products[i].id === id) { p = products[i]; break; }
+        if(products[i].id == id) { p = products[i]; break; }
       }
       if(p) {
         if(title) title.textContent = 'Edit Product';
@@ -836,6 +1064,11 @@ function initAdminSystem() {
         setVal('prod-type', p.type);
         setVal('prod-img', p.img);
         setVal('prod-badge', p.badge || '');
+        // Show preview
+        if(previewEl && p.img) {
+          previewEl.src = p.img;
+          previewEl.style.display = 'block';
+        }
       }
     } else {
       if(title) title.textContent = 'Add Product';
@@ -852,6 +1085,11 @@ function initAdminSystem() {
   function setVal(id, val) {
     var el = document.getElementById(id);
     if(el) el.value = val || '';
+  }
+
+  function getVal(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
   }
 
   function saveProduct() {
@@ -876,17 +1114,13 @@ function initAdminSystem() {
     renderProducts();
   }
 
-  function getVal(id) {
-    var el = document.getElementById(id);
-    return el ? el.value.trim() : '';
-  }
-
   function editProduct(id) {
     openProductModal(id);
   }
 
   function deleteProduct(id) {
     if(!confirm('Delete this product?')) return;
+    console.log('Deleting product with id:', id, 'type:', typeof id);
     AdminSystem.deleteProduct(id);
     renderProducts();
     showToast('Product deleted', 'success');
@@ -902,9 +1136,10 @@ function initAdminSystem() {
     var tbody = document.getElementById('gallery-body');
     if(tbody) {
       tbody.innerHTML = gallery.map(function(g) {
+        var imgSrc = g.img || 'assets/images/fabric-dark-2.jpg';
         return '<tr>' +
-          '<td><img src="' + g.img + '" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius);" /></td>' +
-          '<td>' + g.img.split('/').pop() + '</td>' +
+          '<td><img src="' + imgSrc + '" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius);" onerror="this.src=\'assets/images/fabric-dark-2.jpg\'" /></td>' +
+          '<td>' + (g.img ? g.img.split('/').pop() : 'N/A') + '</td>' +
           '<td>' + g.capEn + '</td>' +
           '<td class="ar">' + g.capAr + '</td>' +
           '<td>' + (g.span || 'Normal') + '</td>' +
@@ -920,10 +1155,14 @@ function initAdminSystem() {
   }
 
   function openGalleryModal() {
+    editingGalleryId = null;
+    uploadedImageData = null;
     setVal('gal-img', '');
     setVal('gal-cap-en', '');
     setVal('gal-cap-ar', '');
     setVal('gal-span', '');
+    var previewEl = document.getElementById('gal-img-preview');
+    if(previewEl) previewEl.style.display = 'none';
     var modal = document.getElementById('gallery-modal');
     if(modal) modal.classList.add('open');
   }
@@ -936,28 +1175,44 @@ function initAdminSystem() {
       span: getVal('gal-span')
     };
     if(!item.img) { showToast('Image path is required', 'error'); return; }
-    AdminSystem.addGalleryItem(item);
+
+    if(editingGalleryId) {
+      AdminSystem.updateGalleryItem(editingGalleryId, item);
+      showToast('Gallery item updated', 'success');
+    } else {
+      AdminSystem.addGalleryItem(item);
+      showToast('Image added to gallery', 'success');
+    }
     closeModal('gallery-modal');
     renderGallery();
-    showToast('Image added to gallery', 'success');
   }
 
   function editGalleryItem(id) {
     var gallery = AdminSystem.getData(AdminSystem.getStorageKeys().GALLERY);
     var g = null;
     for(var i = 0; i < gallery.length; i++) {
-      if(gallery[i].id === id) { g = gallery[i]; break; }
+      if(gallery[i].id == id) { g = gallery[i]; break; }
     }
     if(!g) return;
-    var newCapEn = prompt('New English caption:', g.capEn);
-    if(newCapEn === null) return;
-    AdminSystem.updateGalleryItem(id, { capEn: newCapEn });
-    renderGallery();
-    showToast('Gallery item updated', 'success');
+    editingGalleryId = id;
+    setVal('gal-img', g.img);
+    setVal('gal-cap-en', g.capEn);
+    setVal('gal-cap-ar', g.capAr);
+    setVal('gal-span', g.span || '');
+    var previewEl = document.getElementById('gal-img-preview');
+    if(previewEl && g.img) {
+      previewEl.src = g.img;
+      previewEl.style.display = 'block';
+    }
+    var modal = document.getElementById('gallery-modal');
+    var title = modal.querySelector('h3');
+    if(title) title.textContent = 'Edit Gallery Image';
+    if(modal) modal.classList.add('open');
   }
 
   function deleteGalleryItem(id) {
     if(!confirm('Delete this gallery image?')) return;
+    console.log('Deleting gallery item with id:', id, 'type:', typeof id);
     AdminSystem.deleteGalleryItem(id);
     renderGallery();
     showToast('Image deleted', 'success');
@@ -966,6 +1221,7 @@ function initAdminSystem() {
   function saveGallery() {
     showToast('Gallery saved', 'success');
   }
+
 
   // Content Editor
   function renderContent() {
@@ -1124,11 +1380,369 @@ function initAdminSystem() {
     showToast('User deleted', 'success');
   }
 
+  // ============================================================
+  // IMAGE MANAGER UI (NEW)
+  // ============================================================
+
+  function renderImages() {
+    var images = AdminSystem.getImages();
+    var config = AdminSystem.getGitHubConfig();
+    var tbody = document.getElementById('images-body');
+    var noImages = document.getElementById('no-images');
+    var statImages = document.getElementById('stat-images');
+
+    if(statImages) statImages.textContent = images.length;
+
+    if(!images.length) {
+      if(tbody) tbody.innerHTML = '';
+      if(noImages) noImages.style.display = 'block';
+      return;
+    }
+    if(noImages) noImages.style.display = 'none';
+
+    if(tbody) {
+      tbody.innerHTML = images.map(function(img) {
+        var sizeKb = Math.round((img.size || 0) / 1024);
+        var githubStatus = img.githubUrl ?
+          '<span class="status-badge status-replied" title="' + img.githubUrl + '">Synced</span>' :
+          '<span class="status-badge status-pending">Local</span>';
+        var imgSrc = img.dataUrl || img.githubUrl || '';
+        return '<tr>' +
+          '<td><img src="' + imgSrc + '" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius);" /></td>' +
+          '<td><strong>' + escapeHtml(img.name) + '</strong><br><small style="color:var(--text-light);">' + escapeHtml(img.originalName) + '</small></td>' +
+          '<td>' + sizeKb + ' KB</td>' +
+          '<td>' + img.type + '</td>' +
+          '<td>' + githubStatus + '</td>' +
+          '<td>' +
+            '<div class="table-actions">' +
+              '<button class="table-btn table-btn-view" onclick="adminApp.copyImageUrl(\'' + img.id + '\')">Copy URL</button>' +
+              (config.enabled && !img.githubUrl ? '<button class="table-btn table-btn-edit" onclick="adminApp.syncImageToGitHub(\'' + img.id + '\')">Sync to GitHub</button>' : '') +
+              '<button class="table-btn table-btn-del" onclick="adminApp.deleteImage(\'' + img.id + '\')">Delete</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+  }
+
+  function handleImageUpload(event) {
+    var file = event.target.files[0];
+    if(!file) return;
+
+    if(!file.type.startsWith('image/')) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+
+    if(file.size > 5 * 1024 * 1024) {
+      showToast('Image too large. Max 5MB.', 'error');
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl = e.target.result;
+      uploadedImageData = {
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        originalName: file.name,
+        dataUrl: dataUrl,
+        size: file.size,
+        type: file.type
+      };
+
+      // Show preview
+      var previewEl = document.getElementById('upload-preview');
+      if(previewEl) {
+        previewEl.src = dataUrl;
+        previewEl.style.display = 'block';
+      }
+
+      // Auto-fill the image path field if in a modal
+      var imgPathField = document.getElementById('prod-img') || document.getElementById('gal-img');
+      if(imgPathField && document.querySelector('.modal-overlay.open')) {
+        // Store reference for later use
+        showToast('Image loaded. Save product/gallery to attach.', 'success');
+      }
+
+      showToast('Image ready: ' + file.name, 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveUploadedImage() {
+    if(!uploadedImageData) {
+      showToast('No image uploaded yet', 'error');
+      return;
+    }
+
+    var customName = document.getElementById('upload-name');
+    if(customName && customName.value.trim()) {
+      uploadedImageData.name = customName.value.trim();
+    }
+
+    var image = AdminSystem.saveImage(uploadedImageData);
+    if(image) {
+      showToast('Image saved to local storage', 'success');
+      uploadedImageData = null;
+
+      var previewEl = document.getElementById('upload-preview');
+      if(previewEl) previewEl.style.display = 'none';
+
+      var fileInput = document.getElementById('image-upload');
+      if(fileInput) fileInput.value = '';
+
+      var nameInput = document.getElementById('upload-name');
+      if(nameInput) nameInput.value = '';
+
+      renderImages();
+
+      // Try auto-sync to GitHub if enabled
+      var config = AdminSystem.getGitHubConfig();
+      if(config.enabled && config.token) {
+        syncImageToGitHub(image.id);
+      }
+    } else {
+      showToast('Failed to save image', 'error');
+    }
+  }
+
+  function copyImageUrl(id) {
+    var img = AdminSystem.getImageById(id);
+    if(!img) return;
+    var url = img.githubUrl || img.dataUrl;
+    if(navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() {
+        showToast('URL copied to clipboard!', 'success');
+      }).catch(function() {
+        fallbackCopy(url);
+      });
+    } else {
+      fallbackCopy(url);
+    }
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('URL copied to clipboard!', 'success');
+  }
+
+  function deleteImage(id) {
+    if(!confirm('Delete this image? This cannot be undone.')) return;
+    AdminSystem.deleteImage(id);
+    renderImages();
+    showToast('Image deleted', 'success');
+  }
+
+  function syncImageToGitHub(id) {
+    var img = AdminSystem.getImageById(id);
+    if(!img) { showToast('Image not found', 'error'); return; }
+    if(img.githubUrl) { showToast('Already synced to GitHub', 'success'); return; }
+
+    var config = AdminSystem.getGitHubConfig();
+    if(!config.enabled || !config.token) {
+      showToast('GitHub not configured. Go to Settings > GitHub.', 'error');
+      return;
+    }
+
+    showToast('Syncing to GitHub...', 'success');
+
+    // Extract base64 from data URL
+    var base64Data = img.dataUrl.split(',')[1];
+    var filename = img.name.replace(/\s+/g, '-').toLowerCase() + '-' + Date.now() + '.jpg';
+
+    AdminSystem.uploadToGitHub(filename, base64Data, 'Upload ' + img.name + ' via Admin')
+      .then(function(result) {
+        // Update image record with GitHub URL
+        var images = AdminSystem.getImages();
+        for(var i = 0; i < images.length; i++) {
+          if(images[i].id === id) {
+            images[i].githubUrl = result.url;
+            break;
+          }
+        }
+        AdminSystem.setData(AdminSystem.getStorageKeys().IMAGES, images);
+        renderImages();
+        showToast('Synced to GitHub successfully!', 'success');
+      })
+      .catch(function(err) {
+        console.error('GitHub sync error:', err);
+        showToast('GitHub sync failed: ' + err.message, 'error');
+      });
+  }
+
+  function syncAllImagesToGitHub() {
+    var images = AdminSystem.getImages();
+    var config = AdminSystem.getGitHubConfig();
+    if(!config.enabled || !config.token) {
+      showToast('GitHub not configured', 'error');
+      return;
+    }
+
+    var pending = images.filter(function(img) { return !img.githubUrl; });
+    if(!pending.length) {
+      showToast('All images already synced', 'success');
+      return;
+    }
+
+    showToast('Syncing ' + pending.length + ' images...', 'success');
+
+    var promises = pending.map(function(img) {
+      var base64Data = img.dataUrl.split(',')[1];
+      var filename = img.name.replace(/\s+/g, '-').toLowerCase() + '-' + Date.now() + '.jpg';
+      return AdminSystem.uploadToGitHub(filename, base64Data, 'Upload ' + img.name)
+        .then(function(result) {
+          var allImages = AdminSystem.getImages();
+          for(var i = 0; i < allImages.length; i++) {
+            if(allImages[i].id === img.id) {
+              allImages[i].githubUrl = result.url;
+              break;
+            }
+          }
+          AdminSystem.setData(AdminSystem.getStorageKeys().IMAGES, allImages);
+          return { success: true, name: img.name };
+        })
+        .catch(function(err) {
+          return { success: false, name: img.name, error: err.message };
+        });
+    });
+
+    Promise.all(promises).then(function(results) {
+      var successCount = results.filter(function(r) { return r.success; }).length;
+      renderImages();
+      showToast('Synced ' + successCount + '/' + pending.length + ' images to GitHub', 'success');
+    });
+  }
+
+  function saveGitHubSettings() {
+    var config = {
+      enabled: document.getElementById('gh-enabled').checked,
+      token: document.getElementById('gh-token').value.trim(),
+      owner: document.getElementById('gh-owner').value.trim(),
+      repo: document.getElementById('gh-repo').value.trim(),
+      branch: document.getElementById('gh-branch').value.trim() || 'main',
+      pathPrefix: document.getElementById('gh-path').value.trim() || 'assets/images/'
+    };
+    AdminSystem.saveGitHubConfig(config);
+    showToast('GitHub settings saved', 'success');
+  }
+
+  function loadGitHubSettings() {
+    var config = AdminSystem.getGitHubConfig();
+    var elEnabled = document.getElementById('gh-enabled');
+    var elToken = document.getElementById('gh-token');
+    var elOwner = document.getElementById('gh-owner');
+    var elRepo = document.getElementById('gh-repo');
+    var elBranch = document.getElementById('gh-branch');
+    var elPath = document.getElementById('gh-path');
+
+    if(elEnabled) elEnabled.checked = config.enabled;
+    if(elToken) elToken.value = config.token || '';
+    if(elOwner) elOwner.value = config.owner || '';
+    if(elRepo) elRepo.value = config.repo || '';
+    if(elBranch) elBranch.value = config.branch || 'main';
+    if(elPath) elPath.value = config.pathPrefix || 'assets/images/';
+  }
+
+  function testGitHubConnection() {
+    var config = AdminSystem.getGitHubConfig();
+    if(!config.token || !config.owner || !config.repo) {
+      showToast('Please fill in all GitHub fields first', 'error');
+      return;
+    }
+
+    showToast('Testing connection...', 'success');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.github.com/repos/' + config.owner + '/' + config.repo, true);
+    xhr.setRequestHeader('Authorization', 'token ' + config.token);
+    xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+
+    xhr.onload = function() {
+      if(xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        showToast('Connected to: ' + data.full_name, 'success');
+      } else {
+        showToast('Connection failed: ' + xhr.status, 'error');
+      }
+    };
+    xhr.onerror = function() {
+      showToast('Network error', 'error');
+    };
+    xhr.send();
+  }
+
+  // ============================================================
+  // IMAGE PICKER FOR PRODUCT/GALLERY MODALS (NEW)
+  // ============================================================
+
+  function openImagePicker(targetFieldId) {
+    var images = AdminSystem.getImages();
+    var pickerBody = document.getElementById('image-picker-body');
+    var pickerOverlay = document.getElementById('image-picker-overlay');
+
+    if(!pickerBody || !pickerOverlay) return;
+
+    if(!images.length) {
+      pickerBody.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:2rem;">No images uploaded yet. Go to Image Manager to upload.</p>';
+    } else {
+      pickerBody.innerHTML = images.map(function(img) {
+        var url = img.githubUrl || img.dataUrl;
+        return '<div class="image-picker-item" onclick="adminApp.selectImageForField(\'' + targetFieldId + '\', \'' + url + '\')" style="cursor:pointer;border:2px solid var(--grey-light);border-radius:var(--radius);padding:.5rem;text-align:center;transition:all .2s;" onmouseover="this.style.borderColor=\'var(--navy)\'" onmouseout="this.style.borderColor=\'var(--grey-light)\'">' +
+          '<img src="' + url + '" style="width:100%;height:100px;object-fit:cover;border-radius:var(--radius);margin-bottom:.5rem;" />' +
+          '<div style="font-size:.65rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(img.name) + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    pickerOverlay.dataset.targetField = targetFieldId;
+    pickerOverlay.classList.add('open');
+  }
+
+  function selectImageForField(fieldId, url) {
+    var field = document.getElementById(fieldId);
+    if(field) field.value = url;
+
+    // Show preview
+    var previewId = fieldId === 'prod-img' ? 'prod-img-preview' : 'gal-img-preview';
+    var previewEl = document.getElementById(previewId);
+    if(previewEl) {
+      previewEl.src = url;
+      previewEl.style.display = 'block';
+    }
+
+    closeModal('image-picker-overlay');
+    showToast('Image selected', 'success');
+  }
+
+  function useExternalUrl(fieldId) {
+    var url = prompt('Enter image URL:');
+    if(!url) return;
+    var field = document.getElementById(fieldId);
+    if(field) field.value = url;
+
+    var previewId = fieldId === 'prod-img' ? 'prod-img-preview' : 'gal-img-preview';
+    var previewEl = document.getElementById(previewId);
+    if(previewEl) {
+      previewEl.src = url;
+      previewEl.style.display = 'block';
+    }
+
+    closeModal('image-picker-overlay');
+    showToast('External URL set', 'success');
+  }
+
+
   // Modal helpers
   function closeModal(id) {
     var modal = document.getElementById(id);
     if(modal) modal.classList.remove('open');
     editingProductId = null;
+    editingGalleryId = null;
   }
 
   // Toast
@@ -1204,6 +1818,12 @@ function initAdminSystem() {
     });
   });
 
+  // Image upload listener
+  var imageUploadInput = document.getElementById('image-upload');
+  if(imageUploadInput) {
+    imageUploadInput.addEventListener('change', handleImageUpload);
+  }
+
   // Initialize
   checkSession();
 
@@ -1234,7 +1854,23 @@ function initAdminSystem() {
     openUserModal: openUserModal,
     addUser: addUser,
     deleteUser: deleteUser,
-    closeModal: closeModal
+    closeModal: closeModal,
+    // Image manager
+    renderImages: renderImages,
+    saveUploadedImage: saveUploadedImage,
+    copyImageUrl: copyImageUrl,
+    deleteImage: deleteImage,
+    syncImageToGitHub: syncImageToGitHub,
+    syncAllImagesToGitHub: syncAllImagesToGitHub,
+    saveGitHubSettings: saveGitHubSettings,
+    loadGitHubSettings: loadGitHubSettings,
+    testGitHubConnection: testGitHubConnection,
+    // Image picker
+    openImagePicker: openImagePicker,
+    selectImageForField: selectImageForField,
+    useExternalUrl: useExternalUrl,
+    // Utilities
+    showToast: showToast
   };
 
 } // end initAdminSystem
@@ -1259,4 +1895,3 @@ function initAdminSystem() {
     }
   });
 })();
-
