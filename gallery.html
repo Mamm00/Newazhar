@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery — Al Azhar Tex | معرض الأقمشة</title>
+  <meta name="description" content="Gallery of fabric samples from the Al Azhar Tex showroom in Zagazig. معرض عينات الأقمشة من الأزهر تكس." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" href="assets/images/logo-badge.jpg" />
+  <style>
+    .gallery-full { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:300px; gap:10px; }
+    .gallery-full .gallery-item.span2 { grid-column:span 2; }
+    .gallery-full .gallery-item.tall   { grid-row:span 2; }
+    @media(max-width:900px){ .gallery-full{grid-template-columns:repeat(2,1fr);grid-auto-rows:220px;} .gallery-full .gallery-item.span2{grid-column:span 1;} }
+    @media(max-width:520px){ .gallery-full{grid-template-columns:1fr;grid-auto-rows:240px;} .gallery-full .gallery-item.tall{grid-row:span 1;} }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="topbar-links"><a href="tel:+201003600949">📞 +20 100 360 0949</a><a href="https://wa.me/201003600949" target="_blank" rel="noopener">💬 WhatsApp</a></div>
+      <div>🕐 Sun–Thu &amp; Sat: <strong>11 AM – 7 PM</strong> &nbsp;|&nbsp; <span style="opacity:.6;">Friday: Closed</span></div>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo"><img src="assets/images/logo-badge.jpg" alt="Al Azhar Tex" /></a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Products</a></li>
+        <li><a href="gallery.html" class="active">Gallery</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+      <div class="nav-right">
+        <a href="https://wa.me/201003600949" class="nav-wa" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp
+        </a>
+        <button class="nav-burger" id="burger"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </nav>
+  <nav class="nav-mobile" id="mobile-nav">
+    <button class="nav-mobile-close" id="mobile-close">&times;</button>
+    <a href="index.html">Home</a><a href="products.html">Products</a>
+    <a href="gallery.html">Gallery</a><a href="about.html">About Us</a><a href="contact.html">Contact</a>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="breadcrumb"><a href="index.html">Home</a><span class="sep">/</span><span style="color:rgba(255,255,255,.8);">Gallery</span></div>
+      <span class="eyebrow">Gallery · معرض الصور</span>
+      <h1>Fabric Showroom</h1>
+      <p style="color:rgba(255,255,255,.6);font-size:.88rem;margin-top:.6rem;">
+        Real fabric samples and display shots from our Zagazig gallery.
+        Click any image to view full size.
+        <span class="ar" style="display:block;font-size:.82rem;margin-top:.3rem;color:rgba(255,255,255,.45);">اضغط على أي صورة للتكبير</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- STORE DISPLAY PHOTOS -->
+  <section style="padding:var(--section-gap) 0;">
+    <div class="container">
+
+      <div class="section-header" style="margin-bottom:2rem;">
+        <div>
+          <span class="eyebrow reveal">Store Displays · عروض المتجر</span>
+          <h2 class="section-title reveal reveal-delay-1">The Zagazig Gallery</h2>
+        </div>
+      </div>
+
+      <div class="gallery-full" style="border-radius:var(--radius);overflow:hidden;">
+
+        <!-- Display shots -->
+        <div class="gallery-item tall reveal">
+          <img src="assets/images/store-display-1.png" alt="Al Azhar Tex store display — pink fabric" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Store Display — Pink Collection</div>
+            <div class="gallery-caption-ar ar">عرض المتجر — المجموعة الوردية</div>
+          </div>
+        </div>
+
+        <div class="gallery-item reveal reveal-delay-1">
+          <img src="assets/images/store-display-2.jpg" alt="Al Azhar Tex fabric samples" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Fabric Sample Board</div>
+            <div class="gallery-caption-ar ar">لوحة عينات الأقمشة</div>
+          </div>
+        </div>
+
+        <div class="gallery-item reveal reveal-delay-2">
+          <img src="assets/images/fabric-dark-1.jpg" alt="Dark fabric collection" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">ITY Lickra Display</div>
+            <div class="gallery-caption-ar ar">عرض آي تي واي ليكرا</div>
+          </div>
+        </div>
+
+        <div class="gallery-item span2 reveal reveal-delay-1">
+          <img src="assets/images/fabric-dark-2.jpg" alt="Wide fabric display" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Warsaw &amp; Pirlanta Collection</div>
+            <div class="gallery-caption-ar ar">مجموعة ورسو وبيرلانتا</div>
+          </div>
+        </div>
+
+        <div class="gallery-item tall reveal reveal-delay-2">
+          <img src="assets/images/fabric-dark-3.jpg" alt="Satin display" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Satin Dark Collection</div>
+            <div class="gallery-caption-ar ar">مجموعة ستان داكن</div>
+          </div>
+        </div>
+
+        <div class="gallery-item reveal">
+          <img src="assets/images/fabric-purple.jpg" alt="Purple satin with swatches" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Velvet &amp; Satin Swatches</div>
+            <div class="gallery-caption-ar ar">عينات مخمل وستان</div>
+          </div>
+        </div>
+
+        <div class="gallery-item reveal reveal-delay-1">
+          <img src="assets/images/fabric-crinkle.webp" alt="Crinkle chiffon" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Chiffon Crinkle Texture</div>
+            <div class="gallery-caption-ar ar">نسيج شيفون مكسر</div>
+          </div>
+        </div>
+
+        <div class="gallery-item reveal reveal-delay-2">
+          <img src="assets/images/fabric-swatch-sofa.jpg" alt="Fabric swatches on sofa" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Terracotta Swatch Display</div>
+            <div class="gallery-caption-ar ar">عرض عينات تيراكوتا</div>
+          </div>
+        </div>
+
+        <div class="gallery-item span2 reveal reveal-delay-1">
+          <img src="assets/images/fabric-swatch-card.png" alt="Al Azhar Tex fabric card" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+          <div class="gallery-caption">
+            <div class="gallery-caption-name">Official Sample Card</div>
+            <div class="gallery-caption-ar ar">بطاقة عينات الأزهر تكس</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CATALOGUE VISUAL SECTION -->
+  <section style="padding:0 0 var(--section-gap); background:var(--off-white);">
+    <div class="container" style="padding-top:var(--section-gap);">
+      <div class="section-header" style="margin-bottom:2rem;">
+        <div>
+          <span class="eyebrow reveal">Catalogue Visuals · صور الكتالوج</span>
+          <h2 class="section-title reveal reveal-delay-1">Product Line Posters</h2>
+        </div>
+        <a href="products.html" class="btn btn-outline reveal">Browse Products →</a>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;">
+        <div class="gallery-item reveal" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-1.jpg" alt="Al Azhar Tex catalogue" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal reveal-delay-1" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-2.jpg" alt="Fabric lines poster" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal reveal-delay-2" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-3.jpg" alt="Warsaw Pirlanta poster" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal reveal-delay-3" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-4.jpg" alt="Chiffon Satin poster" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-5.jpg" alt="Full range poster" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal reveal-delay-1" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-6.jpg" alt="Fabric rolls poster" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal reveal-delay-2" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-7.jpg" alt="Al Azhar Tex poster" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal reveal-delay-3" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-8.jpg" alt="Catalogue full range" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+        <div class="gallery-item reveal" style="aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;">
+          <img src="assets/images/catalogue-9.jpg" alt="Al Azhar Tex full catalogue" loading="lazy" />
+          <div class="gallery-item-overlay"><span class="gallery-zoom">⊕</span></div>
+        </div>
+      </div>
+
+      <!-- Visit CTA -->
+      <div class="promo-banner" style="margin-top:3rem;border-radius:var(--radius);">
+        <div class="container promo-banner-inner" style="padding:2.5rem clamp(1rem,4vw,2.5rem);">
+          <div class="promo-banner-text">
+            <span class="eyebrow">Visit Us · زورونا</span>
+            <h2>See the Fabrics<br>In Person</h2>
+            <p class="ar-sub ar">زور معرضنا في الزقازيق لتتحسس الأقمشة وتختار بنفسك</p>
+          </div>
+          <div style="display:flex;gap:.9rem;flex-wrap:wrap;">
+            <a href="contact.html" class="btn btn-white">Get Directions →</a>
+            <a href="products.html" class="btn btn-outline-white">Browse Products</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox"><button class="lightbox-close" id="lightbox-close">&times;</button><img src="" alt="" class="lightbox-img" id="lightbox-img" /></div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <img src="assets/images/logo-badge.jpg" alt="Al Azhar Tex" class="footer-logo" />
+          <div class="footer-tagline ar">جودة القماش من الأزهر تكس</div>
+          <p class="footer-desc">Wholesale fabric supplier · Zagazig, Egypt</p>
+          <div class="social-icons">
+            <a href="#" class="social-icon"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+            <a href="#" class="social-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col"><h4>Navigation</h4><ul><li><a href="index.html">Home</a></li><li><a href="products.html">Products</a></li><li><a href="gallery.html">Gallery</a></li><li><a href="about.html">About Us</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+        <div class="footer-col"><h4>Fabrics</h4><ul><li><a href="products.html">Warsaw · Pirlanta</a></li><li><a href="products.html">Chiffon · Satin</a></li><li><a href="products.html">Rotana · Royal</a></li><li><a href="products.html">ITY Lickra</a></li></ul></div>
+        <div class="footer-col"><h4>Contact</h4><ul><li><a href="tel:+201003600949">+20 100 360 0949</a></li><li><a href="https://wa.me/201003600949">WhatsApp</a></li><li><a href="contact.html">Zagazig, Egypt</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><p class="footer-copy">© 2025 Al Azhar Tex · الأزهر تكس</p></div>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/201003600949" class="whatsapp-float" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span class="wa-label">WhatsApp</span>
+  </a>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

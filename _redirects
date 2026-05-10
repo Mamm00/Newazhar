@@ -1,0 +1,12 @@
+# Al Azhar Tex — Clean URL Redirects
+/home              /index.html     200
+/shop              /products.html  200
+/catalogue         /products.html  200
+/about-us          /about.html     200
+/aboutus           /about.html     200
+/get-in-touch      /contact.html   200
+/enquiry           /contact.html   200
+/admin             /admin.html     200
+/cms               /admin.html     200
+/panel             /admin.html     200
+/*                 /index.html     404
